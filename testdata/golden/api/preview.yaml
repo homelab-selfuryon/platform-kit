@@ -1,0 +1,390 @@
+apiVersion: v1
+automountServiceAccountToken: false
+kind: ServiceAccount
+metadata:
+  labels:
+    app.kubernetes.io/name: api
+    app.kubernetes.io/part-of: examples
+    app.kubernetes.io/managed-by: platform-kit
+    app.kubernetes.io/version: v1.2.0
+    homelab-selfuryon.github.io/pr: "12"
+    homelab-selfuryon.github.io/team: examples
+    homelab-selfuryon.github.io/env: preview
+  name: api
+---
+apiVersion: secrets-store.csi.x-k8s.io/v1
+kind: SecretProviderClass
+metadata:
+  labels:
+    app.kubernetes.io/name: api
+    app.kubernetes.io/part-of: examples
+    app.kubernetes.io/managed-by: platform-kit
+    app.kubernetes.io/version: v1.2.0
+    homelab-selfuryon.github.io/pr: "12"
+    homelab-selfuryon.github.io/team: examples
+    homelab-selfuryon.github.io/env: preview
+  name: api
+spec:
+  provider: openbao
+  parameters:
+    baoAddress: https://openbao.openbao-system.svc:8200
+    baoKubernetesMountPath: kubernetes
+    roleName: examples-preview-api
+    objects: |
+      - objectName: "example-key"
+        secretPath: "kv/data/examples/preview/api/example-key"
+        secretKey: "value"
+        filePermission: 0440
+      - objectName: "other.key"
+        secretPath: "kv/data/examples/preview/api/other.key"
+        secretKey: "value"
+        filePermission: 0440
+---
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  labels:
+    app.kubernetes.io/name: api
+    app.kubernetes.io/part-of: examples
+    app.kubernetes.io/managed-by: platform-kit
+    app.kubernetes.io/version: v1.2.0
+    homelab-selfuryon.github.io/pr: "12"
+    homelab-selfuryon.github.io/team: examples
+    homelab-selfuryon.github.io/env: preview
+  name: api-db
+spec:
+  instances: 1
+  storage:
+    size: 5Gi
+  resources:
+    requests:
+      cpu: 250m
+      memory: 512Mi
+    limits:
+      memory: 1Gi
+---
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  labels:
+    app.kubernetes.io/name: api
+    app.kubernetes.io/part-of: examples
+    app.kubernetes.io/managed-by: platform-kit
+    app.kubernetes.io/version: v1.2.0
+    homelab-selfuryon.github.io/pr: "12"
+    homelab-selfuryon.github.io/team: examples
+    homelab-selfuryon.github.io/env: preview
+  name: api-db
+spec:
+  endpointSelector:
+    matchLabels:
+      cnpg.io/cluster: api-db
+  ingress:
+    - fromEndpoints:
+        - matchLabels:
+            app.kubernetes.io/name: api
+        - matchLabels:
+            cnpg.io/cluster: api-db
+        - matchLabels:
+            k8s:io.kubernetes.pod.namespace: cnpg-system
+      toPorts:
+        - ports:
+            - port: "5432"
+              protocol: TCP
+            - port: "8000"
+              protocol: TCP
+  egress:
+    - toEndpoints:
+        - matchLabels:
+            k8s:io.kubernetes.pod.namespace: kube-system
+            k8s:k8s-app: kube-dns
+      toPorts:
+        - ports:
+            - port: "53"
+              protocol: ANY
+          rules:
+            dns:
+              - matchPattern: '*'
+    - toEndpoints:
+        - matchLabels:
+            cnpg.io/cluster: api-db
+      toPorts:
+        - ports:
+            - port: "5432"
+              protocol: TCP
+            - port: "8000"
+              protocol: TCP
+    - toEntities:
+        - kube-apiserver
+      toPorts:
+        - ports:
+            - port: "443"
+              protocol: TCP
+            - port: "6443"
+              protocol: TCP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app.kubernetes.io/name: api
+    app.kubernetes.io/part-of: examples
+    app.kubernetes.io/managed-by: platform-kit
+    app.kubernetes.io/version: v1.2.0
+    homelab-selfuryon.github.io/pr: "12"
+    homelab-selfuryon.github.io/team: examples
+    homelab-selfuryon.github.io/env: preview
+  name: api
+spec:
+  ports:
+    - appProtocol: http
+      name: http
+      port: 80
+      protocol: TCP
+      targetPort: http
+  selector:
+    app.kubernetes.io/name: api
+  type: ClusterIP
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app.kubernetes.io/name: api
+    app.kubernetes.io/part-of: examples
+    app.kubernetes.io/managed-by: platform-kit
+    app.kubernetes.io/version: v1.2.0
+    homelab-selfuryon.github.io/pr: "12"
+    homelab-selfuryon.github.io/team: examples
+    homelab-selfuryon.github.io/env: preview
+  name: api
+spec:
+  replicas: 1
+  revisionHistoryLimit: 3
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: api
+  strategy:
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: api
+        app.kubernetes.io/part-of: examples
+        app.kubernetes.io/managed-by: platform-kit
+        homelab-selfuryon.github.io/pr: "12"
+        homelab-selfuryon.github.io/team: examples
+        homelab-selfuryon.github.io/env: preview
+    spec:
+      automountServiceAccountToken: false
+      containers:
+        - env:
+            - name: PORT
+              value: "9000"
+            - name: APP_ENV
+              value: preview
+            - name: APP_VERSION
+              value: v1.2.0
+            - name: AUTH_AUDIENCE
+              value: api
+            - name: AUTH_ALLOWED_SUBJECTS
+              value: system:serviceaccount:examples-pr-12:caller
+            - name: LOG_LEVEL
+              value: debug
+          image: ghcr.io/homelab-selfuryon/example@sha256:0000000000000000000000000000000000000000000000000000000000000000
+          imagePullPolicy: IfNotPresent
+          livenessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /healthz
+              port: http
+            periodSeconds: 10
+            timeoutSeconds: 2
+          name: app
+          ports:
+            - containerPort: 9000
+              name: http
+              protocol: TCP
+          readinessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /readyz
+              port: http
+            periodSeconds: 5
+            timeoutSeconds: 2
+          resources:
+            limits:
+              memory: 256Mi
+            requests:
+              cpu: 100m
+              memory: 128Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+            privileged: false
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+            seccompProfile:
+              type: RuntimeDefault
+          startupProbe:
+            failureThreshold: 30
+            httpGet:
+              path: /healthz
+              port: http
+            periodSeconds: 2
+          volumeMounts:
+            - mountPath: /tmp
+              name: tmp
+            - mountPath: /var/run/secrets/app
+              name: secrets
+              readOnly: true
+            - mountPath: /var/run/secrets/db
+              name: db
+              readOnly: true
+            - mountPath: /var/run/secrets/kube-api
+              name: kube-api
+              readOnly: true
+      enableServiceLinks: false
+      securityContext:
+        fsGroup: 65532
+        runAsGroup: 65532
+        runAsNonRoot: true
+        runAsUser: 65532
+        seccompProfile:
+          type: RuntimeDefault
+      serviceAccountName: api
+      terminationGracePeriodSeconds: 30
+      volumes:
+        - emptyDir:
+            sizeLimit: 64Mi
+          name: tmp
+        - csi:
+            driver: secrets-store.csi.k8s.io
+            readOnly: true
+            volumeAttributes:
+              secretProviderClass: api
+          name: secrets
+        - name: db
+          secret:
+            defaultMode: 288
+            secretName: api-db-app
+        - name: kube-api
+          projected:
+            defaultMode: 288
+            sources:
+              - serviceAccountToken:
+                  expirationSeconds: 3600
+                  path: token
+              - configMap:
+                  items:
+                    - key: ca.crt
+                      path: ca.crt
+                  name: kube-root-ca.crt
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  labels:
+    app.kubernetes.io/name: api
+    app.kubernetes.io/part-of: examples
+    app.kubernetes.io/managed-by: platform-kit
+    app.kubernetes.io/version: v1.2.0
+    homelab-selfuryon.github.io/pr: "12"
+    homelab-selfuryon.github.io/team: examples
+    homelab-selfuryon.github.io/env: preview
+  name: api
+spec:
+  parentRefs:
+    - group: gateway.networking.k8s.io
+      kind: Gateway
+      name: preview
+      namespace: envoy-gateway-system
+      sectionName: https
+  hostnames:
+    - api-pr-12.preview.homelab.example
+  rules:
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /
+      backendRefs:
+        - name: api
+          port: 80
+---
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  labels:
+    app.kubernetes.io/name: api
+    app.kubernetes.io/part-of: examples
+    app.kubernetes.io/managed-by: platform-kit
+    app.kubernetes.io/version: v1.2.0
+    homelab-selfuryon.github.io/pr: "12"
+    homelab-selfuryon.github.io/team: examples
+    homelab-selfuryon.github.io/env: preview
+  name: api
+spec:
+  endpointSelector:
+    matchLabels:
+      app.kubernetes.io/name: api
+  ingress:
+    - fromEndpoints:
+        - matchLabels:
+            k8s:io.kubernetes.pod.namespace: envoy-gateway-system
+            k8s:homelab-selfuryon.github.io/component: gateway-proxy
+      toPorts:
+        - ports:
+            - port: "9000"
+              protocol: TCP
+    - fromEndpoints:
+        - matchLabels:
+            k8s:io.kubernetes.pod.namespace: examples-pr-12
+            k8s:app.kubernetes.io/name: caller
+      toPorts:
+        - ports:
+            - port: "9000"
+              protocol: TCP
+  egress:
+    - toEndpoints:
+        - matchLabels:
+            k8s:io.kubernetes.pod.namespace: kube-system
+            k8s:k8s-app: kube-dns
+      toPorts:
+        - ports:
+            - port: "53"
+              protocol: ANY
+          rules:
+            dns:
+              - matchPattern: '*'
+    - toFQDNs:
+        - matchName: api.example.org
+      toPorts:
+        - ports:
+            - port: "443"
+              protocol: TCP
+    - toFQDNs:
+        - matchName: mirror.example.org
+      toPorts:
+        - ports:
+            - port: "8443"
+              protocol: TCP
+    - toEndpoints:
+        - matchLabels:
+            cnpg.io/cluster: api-db
+      toPorts:
+        - ports:
+            - port: "5432"
+              protocol: TCP
+    - toEntities:
+        - kube-apiserver
+      toPorts:
+        - ports:
+            - port: "443"
+              protocol: TCP
+            - port: "6443"
+              protocol: TCP

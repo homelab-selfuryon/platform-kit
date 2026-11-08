@@ -1,0 +1,54 @@
+name: Release
+
+# A tag vX.Y.Z publishes the CUE module at that version to the GHCR CUE
+# registry: github.com/homelab-selfuryon/platform-kit@v0 -> ghcr.io/homelab-selfuryon/platform-kit.
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions: {}
+
+env:
+  NIXPKGS_REV: f9a75f41be3a74eab55d3a7679d34ad6cc0da977
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-26.04
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      packages: write
+    env:
+      CUE_REGISTRY: 'inline:moduleRegistries: "github.com/homelab-selfuryon": {registry: "ghcr.io/homelab-selfuryon/cue", stripPrefix: true}'
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: nixbuild/nix-quick-install-action@9f63be77f412a248c9d9a65a4c82cf066cdf8f0c # v35
+      - name: Install devenv
+        run: nix profile install "github:NixOS/nixpkgs/${NIXPKGS_REV}#devenv"
+
+      - name: Test before publishing
+        run: devenv test
+
+      - name: Log in to GHCR
+        env:
+          GH_ACTOR: ${{ github.actor }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          # CUE reads registry credentials from the Docker config.
+          mkdir -p "${RUNNER_TEMP}/docker"
+          auth=$(printf '%s:%s' "${GH_ACTOR}" "${GH_TOKEN}" | base64 -w0)
+          printf '{"auths":{"ghcr.io":{"auth":"%s"}}}' "${auth}" >"${RUNNER_TEMP}/docker/config.json"
+          echo "DOCKER_CONFIG=${RUNNER_TEMP}/docker" >>"${GITHUB_ENV}"
+
+      - name: Publish the module
+        env:
+          TAG: ${{ github.ref_name }}
+        run: devenv shell -- cue mod publish "${TAG}"

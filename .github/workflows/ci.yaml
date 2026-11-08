@@ -1,0 +1,50 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions: {}
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+env:
+  # nixpkgs revision devenv itself comes from; the tools come from devenv.lock.
+  NIXPKGS_REV: f9a75f41be3a74eab55d3a7679d34ad6cc0da977
+
+jobs:
+  # `devenv test` (devenv.nix): treefmt, the CUE module tests (vet, every example rendered for every
+  # environment and compared with testdata/golden, bad input rejected), actionlint, zizmor.
+  test:
+    runs-on: ubuntu-26.04
+    timeout-minutes: 30
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: nixbuild/nix-quick-install-action@9f63be77f412a248c9d9a65a4c82cf066cdf8f0c # v35
+      - name: Install devenv
+        run: nix profile install "github:NixOS/nixpkgs/${NIXPKGS_REV}#devenv"
+      - name: devenv test
+        run: devenv test
+
+  # The single required status check (branch ruleset in platform-terraform/github).
+  final-check:
+    if: always()
+    needs: [test]
+    runs-on: ubuntu-26.04
+    timeout-minutes: 5
+    permissions: {}
+    steps:
+      - name: Require every job to have succeeded or been skipped
+        env:
+          RESULTS: ${{ join(needs.*.result, ' ') }}
+        run: |
+          for r in $RESULTS; do
+            case "$r" in success|skipped) ;; *) echo "a required job ended with: $r"; exit 1 ;; esac
+          done
