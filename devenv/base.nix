@@ -36,6 +36,7 @@
               "devenv.lock"
               "testdata/**"
               "LICENSE"
+              "CHANGELOG.md" # written by release-please; formatting it would fight every release
               "release-please-config.json"
               ".release-please-manifest.json"
             ];
