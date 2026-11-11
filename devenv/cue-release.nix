@@ -5,6 +5,12 @@
 # `nix hash convert --hash-algo sha256 --to sri`), or give `platformKit.cue.hashes`.
 rec {
   knownHashes = {
+    "0.18.0-rc.4" = {
+      "x86_64-linux" = "sha256-CJWN/zgRjnRh5r9onjKf9UfwkCFwEPVokQn7lerLc2Y=";
+      "aarch64-linux" = "sha256-PvBhc+QphOOVwC9mZfasZAdn1c48OJ8Nn/tfWBKjz70=";
+      "x86_64-darwin" = "sha256-NboL1Mmi/0zmfT8Wu5B0J6t2eFst0nj32pxKlDIdgRs=";
+      "aarch64-darwin" = "sha256-ONtaX+ArykjxjWZBcNTi9lV0XpNxG43zDl437XHwT1E=";
+    };
     "0.18.0-rc.3" = {
       "x86_64-linux" = "sha256-krWMjj9th0vHRt4uve2boMaSRgYfxjYmbbRZ6fL6W50=";
       "aarch64-linux" = "sha256-KRz7DtQhfSEi4i93UNJ6svGn848TPuts+TqIuiLFbsM=";

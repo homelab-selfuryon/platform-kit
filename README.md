@@ -120,7 +120,7 @@ A repository's own `devenv.nix` adds only what is specific to it. Details of `ru
 
 - the Rust toolchain from the repository's `rust-toolchain.toml` (rust-overlay), cargo-deny,
   cargo-nextest, sqlx-cli, skopeo, jq, actionlint, zizmor, shellcheck;
-- **CUE**: the upstream pre-release binary (default `0.18.0-rc.3`, the modules use language `v0.18.0`);
+- **CUE**: the upstream pre-release binary (default `0.18.0-rc.4`, the modules use language `v0.18.0`);
 - **formatting** through devenv's treefmt integration: rustfmt (edition 2024), nixfmt, taplo (TOML) and
   `cue fmt`. Run `treefmt`; the git hook is the same treefmt, clippy (`-D warnings`) is a separate hook;
 - **`devenv test`**: `treefmt --fail-on-change`, a check that the `Containerfile` build stage
@@ -166,7 +166,7 @@ planned).
 
 ### CUE version
 
-`platformKit.cue.version` (default `"0.18.0-rc.3"`) selects the upstream release binary
+`platformKit.cue.version` (default `"0.18.0-rc.4"`) selects the upstream release binary
 (`devenv/cue-release.nix`: per-system tarball from the GitHub releases with fixed hashes). `platformKit.cue.version = null;` uses the CUE of nixpkgs. A version that is
 not listed needs `platformKit.cue.hashes = { x86_64-linux = "sha256-…"; … };`. The option changes the
 tool only; the language version of a module is in its `cue.mod/module.cue`.

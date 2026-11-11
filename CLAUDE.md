@@ -34,7 +34,7 @@ devenv shell -- actionlint && devenv shell -- zizmor --offline .github/workflows
 ## Rules
 
 - CUE language version v0.18.0 (`cue.mod/module.cue`); the devenv CUE is the upstream pre-release
-  (`platformKit.cue.version`, default 0.18.0-rc.3). Publishing needs `source: kind: "self"` there.
+  (`platformKit.cue.version`, default 0.18.0-rc.4). Publishing needs `source: kind: "self"` there.
 - `#App` holds the inputs and an optional `context`; its `objects` and `manifestsYAML` (from `#Render`) only
   exist when `context` is present, so `cue vet ./deploy` passes without it. CUE 0.18 pitfalls: a struct may
   not add fields next to an embedded definition (strict embedding), so the render is a comprehension inside
