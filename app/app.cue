@@ -385,6 +385,14 @@ import (
 		metadata: {name: "\(_svc)-db", labels: _labels}
 		spec: {
 			instances: _spec.dbInstances
+			// PostgreSQL image from the platform's catalog (the cluster refuses anything else).
+			imageCatalogRef: {
+				apiGroup: "postgresql.cnpg.io"
+				kind:     "ClusterImageCatalog"
+				name:     #Cluster.postgresCatalog
+				major:    #Cluster.postgresMajor
+			}
+			enableSuperuserAccess: false
 			// No storageClass: the cluster default.
 			storage: size: _size.db.storage
 			resources: {
@@ -528,6 +536,9 @@ import (
 	openbaoMount:     "kubernetes"
 	openbaoKV:        "kv"
 	cnpgNamespace:    "cnpg-system"
+	// ClusterImageCatalog of PostgreSQL images and the major version apps run.
+	postgresCatalog: "postgresql"
+	postgresMajor:   18
 	// user and group of the container (distroless nonroot).
 	uid: 65532
 }
