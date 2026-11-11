@@ -3,8 +3,10 @@
 // topology. An environment is data; the schema in package app reads it.
 package env
 
-// domain is a placeholder until a real domain is chosen (meta/decisions.md).
-domain: "homelab.example"
+// domain of the only cluster, alpha-01 (meta/decisions.md: public records with private addresses).
+// It must match the Gateways' listeners in platform-components (clusters/alpha-01/cluster.cue).
+// With a second cluster this moves into the render context.
+domain: "homelab.ys7.me"
 
 #Name: "preview" | "staging" | "prod"
 

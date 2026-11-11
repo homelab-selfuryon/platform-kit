@@ -298,7 +298,7 @@ spec:
       namespace: envoy-gateway-system
       sectionName: https
   hostnames:
-    - api.staging.homelab.example
+    - api.staging.homelab.ys7.me
   rules:
     - matches:
         - path:
