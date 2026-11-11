@@ -10,7 +10,7 @@
 # the ones the module needs (nixpkgs, git-hooks, rust-overlay, treefmt-nix) next to platform-kit; see
 # rust-app-template/devenv.yaml. In devenv.nix:
 #   platformKit.postgres.enable = true;   # local Postgres, DB_URI_FILE and DATABASE_URL exported
-#   platformKit.cue.version = null;   # nixpkgs CUE instead of the default pre-release (rc.3)
+#   platformKit.cue.version = null;   # nixpkgs CUE instead of the default pre-release (rc.4)
 {
   config,
   lib,

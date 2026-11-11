@@ -27,7 +27,7 @@ in
   options.platformKit.cue = {
     version = lib.mkOption {
       type = lib.types.nullOr lib.types.str;
-      default = "0.18.0-rc.3";
+      default = "0.18.0-rc.4";
       example = null;
       description = ''
         The upstream release binary of that CUE version (the modules use language v0.18.0, which
