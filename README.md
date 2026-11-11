@@ -94,8 +94,8 @@ Environment variables set by the platform (a `deploy.cue` `env` entry may not us
 
 Environments (`env/env.cue`): preview 1 replica, namespace `<team>-pr-<n>`, host
 `<svc>-pr-<n>.preview.<domain>`; staging 1 replica, `<team>-staging`, `<svc>.staging.<domain>`; prod 2
-replicas and a PodDisruptionBudget, `<team>-prod`, `<svc>.<domain>`. The domain is the placeholder
-`homelab.example`. An app that `calls` another one in `preview` calls the staging instance (there is
+replicas and a PodDisruptionBudget, `<team>-prod`, `<svc>.<domain>`. The domain is alpha-01's
+`homelab.ys7.me`. An app that `calls` another one in `preview` calls the staging instance (there is
 no sibling in a preview namespace); the callee's allowlist does not name preview namespaces, so such a
 call is refused.
 

@@ -306,7 +306,7 @@ spec:
       namespace: envoy-gateway-system
       sectionName: https
   hostnames:
-    - api-pr-12.preview.homelab.example
+    - api-pr-12.preview.homelab.ys7.me
   rules:
     - matches:
         - path:

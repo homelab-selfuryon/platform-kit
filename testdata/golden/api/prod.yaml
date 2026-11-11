@@ -322,7 +322,7 @@ spec:
       namespace: envoy-gateway-system
       sectionName: https
   hostnames:
-    - api.homelab.example
+    - api.homelab.ys7.me
   rules:
     - matches:
         - path:
