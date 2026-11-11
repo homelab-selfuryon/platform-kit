@@ -86,6 +86,13 @@ import metav1 "cue.dev/x/k8s.io/apimachinery/pkg/apis/meta/v1"
 			requests?: [string]: string
 			limits?: [string]:   string
 		}
+		imageCatalogRef?: {
+			apiGroup: "postgresql.cnpg.io"
+			kind:     "ImageCatalog" | "ClusterImageCatalog"
+			name:     string
+			major:    int
+		}
+		enableSuperuserAccess?: bool
 		bootstrap?: initdb?: {
 			database?: string
 			owner?:    string
