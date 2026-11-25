@@ -538,7 +538,7 @@ import (
 	cnpgNamespace:    "cnpg-system"
 	// ClusterImageCatalog of PostgreSQL images and the major version apps run.
 	postgresCatalog: "postgresql"
-	postgresMajor:   18
+	postgresMajor:   19
 	// user and group of the container (distroless nonroot).
 	uid: 65532
 }
