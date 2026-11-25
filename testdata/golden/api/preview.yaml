@@ -59,7 +59,7 @@ spec:
     apiGroup: postgresql.cnpg.io
     kind: ClusterImageCatalog
     name: postgresql
-    major: 18
+    major: 19
   resources:
     requests:
       cpu: 250m
